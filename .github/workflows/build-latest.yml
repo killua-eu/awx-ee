@@ -29,9 +29,9 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
         run: |
-          tox -e docker -- --tag=quay.io/ansible/awx-ee:latest
+          tox -e docker -- --tag=quay.io/senbonzakura/awx-ee:latest
 
       - name: Push images
         run: |
          echo "${{ secrets.QUAY_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USERNAME }} --password-stdin
-         docker push quay.io/ansible/awx-ee:latest
+         docker push quay.io/senbonzakura/awx-ee:latest
