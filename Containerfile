@@ -34,4 +34,14 @@ ADD run.sh /run.sh
 CMD /run.sh
 USER 1000
 RUN git lfs install
+ENV GO_DOWNLOAD_URI="https://go.dev/dl/go1.18.4.linux-amd64.tar.gz"
+ENV PATH="/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/snapd/snap/bin:/sbin:/usr/local/go/bin:/opt/go/bin"
+ENV PKG_CONFIG_PATH="/usr/local/lib"
+ENV GOROOT="/usr/local/go"
+ENV GOPATH="~/virtualenv/go"
+ENV CGO_CFLAGS="-I/root/go/deps/raft/include/ -I/root/go/deps/dqlite/include/"
+ENV CGO_LDFLAGS="-L/root/go/deps/raft/.libs -L/root/go/deps/dqlite/.libs/"
+ENV LD_LIBRARY_PATH="/root/go/deps/raft/.libs/:/root/go/deps/dqlite/.libs/"
+ENV CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
+RUN cd /tmp && mkdir -p ${GOPATH} && wget "${GO_DOWNLOAD_URI}" \ && tar -C /usr/local -xzf ./go1*tar.gz \ && rm ./go1*tar.gz
 LABEL ansible-execution-environment=true
