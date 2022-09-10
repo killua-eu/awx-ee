@@ -32,7 +32,7 @@ COPY --from=quay.io/ansible/receptor:devel /usr/bin/receptor /usr/bin/receptor
 RUN mkdir -p /var/run/receptor
 ADD run.sh /run.sh
 CMD /run.sh
-USER 1000
+USER root
 RUN git lfs install
 ENV GO_DOWNLOAD_URI="https://go.dev/dl/go1.18.4.linux-amd64.tar.gz"
 ENV PATH="/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/snapd/snap/bin:/sbin:/usr/local/go/bin:/opt/go/bin"
