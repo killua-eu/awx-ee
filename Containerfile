@@ -43,8 +43,9 @@ ENV CGO_CFLAGS="-I/root/go/deps/raft/include/ -I/root/go/deps/dqlite/include/"
 ENV CGO_LDFLAGS="-L/root/go/deps/raft/.libs -L/root/go/deps/dqlite/.libs/"
 ENV LD_LIBRARY_PATH="/root/go/deps/raft/.libs/:/root/go/deps/dqlite/.libs/"
 ENV CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
+RUN ls -ahl /usr/local
 USER root
-RUN cd /tmp && mkdir -p "${GOPATH}" && wget "${GO_DOWNLOAD_URI}" && tar -C /usr/local -xzf ./go1*tar.gz && rm ./go1*tar.gz
+RUN cd /tmp && mkdir -p "${GOPATH}" && wget "${GO_DOWNLOAD_URI}" && pwd && ls -ahl . && tar -C /usr/local -xzf ./go1*tar.gz && rm ./go1*tar.gz
 ADD ./lxc ./lxc
 USER root
 RUN cd ./lxc && ./autogen.sh \ && ./configure --prefix=/usr \ && make \ && make install \ && libtool --finish /usr/local/lib \ && ldconfig -n /usr/local/lib
