@@ -6,6 +6,34 @@ ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=
 ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS=
 USER root
 
+RUN git lfs install
+ENV GO_DOWNLOAD_URI="https://go.dev/dl/go1.18.4.linux-amd64.tar.gz" \
+    PATH="/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/snapd/snap/bin:/sbin:/usr/local/go/bin:/opt/go/bin" \
+    PKG_CONFIG_PATH="/usr/local/lib" \
+    GOROOT=/usr/local/go \
+    GOPATH=/opt/go \
+    CGO_CFLAGS="-I/root/go/deps/raft/include/ -I/root/go/deps/dqlite/include/" \
+    CGO_LDFLAGS="-L/root/go/deps/raft/.libs -L/root/go/deps/dqlite/.libs/" \
+    LD_LIBRARY_PATH="/root/go/deps/raft/.libs/:/root/go/deps/dqlite/.libs/" \
+    CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
+
+WORKDIR /tmp
+USER root
+RUN cd /tmp && mkdir -p "${GOPATH}" && wget "${GO_DOWNLOAD_URI}" && pwd && ls -ahl . && tar -C /usr/local -xzf ./go1*tar.gz && rm ./go1*tar.gz
+ADD ./lxc ./lxc
+USER root
+RUN cd ./lxc && ./autogen.sh \ && ./configure --prefix=/usr \ && make \ && make install \ && libtool --finish /usr/local/lib \ && ldconfig -n /usr/local/lib
+ADD ./raft ./raft
+USER root
+RUN cd ./raft && autoreconf -i \ && ./configure --prefix=/usr \ && make  \ && make install \ && libtool --finish /usr/local/lib \ && ldconfig -n /usr/local/lib
+ADD ./dqlite ./dqlite
+USER root
+RUN cd ./dqlite \ && autoreconf -i \ && ./configure --prefix=/usr \ && make \ && make install
+ADD ./lxd ./lxd
+RUN cd ./lxd \ && make deps \ && make
+
+
+
 ADD _build /build
 WORKDIR /build
 
@@ -33,28 +61,4 @@ RUN mkdir -p /var/run/receptor
 ADD run.sh /run.sh
 CMD /run.sh
 USER root
-RUN git lfs install
-ENV GO_DOWNLOAD_URI="https://go.dev/dl/go1.18.4.linux-amd64.tar.gz"
-ENV PATH="/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/var/lib/snapd/snap/bin:/sbin:/usr/local/go/bin:/opt/go/bin"
-ENV PKG_CONFIG_PATH="/usr/local/lib"
-ENV GOROOT="/usr/local/go"
-ENV GOPATH="~/virtualenv/go"
-ENV CGO_CFLAGS="-I/root/go/deps/raft/include/ -I/root/go/deps/dqlite/include/"
-ENV CGO_LDFLAGS="-L/root/go/deps/raft/.libs -L/root/go/deps/dqlite/.libs/"
-ENV LD_LIBRARY_PATH="/root/go/deps/raft/.libs/:/root/go/deps/dqlite/.libs/"
-ENV CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
-RUN ls -ahl /usr/local
-USER root
-RUN cd /tmp && mkdir -p "${GOPATH}" && wget "${GO_DOWNLOAD_URI}" && pwd && ls -ahl . && tar -C /usr/local -xzf ./go1*tar.gz && rm ./go1*tar.gz
-ADD ./lxc ./lxc
-USER root
-RUN cd ./lxc && ./autogen.sh \ && ./configure --prefix=/usr \ && make \ && make install \ && libtool --finish /usr/local/lib \ && ldconfig -n /usr/local/lib
-ADD ./raft ./raft
-USER root
-RUN cd ./raft && autoreconf -i \ && ./configure --prefix=/usr \ && make  \ && make install \ && libtool --finish /usr/local/lib \ && ldconfig -n /usr/local/lib
-ADD ./dqlite ./dqlite
-USER root
-RUN cd ./dqlite \ && autoreconf -i \ && ./configure --prefix=/usr \ && make \ && make install
-ADD ./lxd ./lxd
-RUN cd ./lxd \ && make deps \ && make
 LABEL ansible-execution-environment=true
